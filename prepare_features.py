@@ -103,14 +103,14 @@ if __name__ == "__main__":
     # 👇 NEW VERSION 2 with online enabled
     aqi_fg = fs.create_feature_group(
         name="pakistan_aqi_features",
-        version=2,
+        version=3,
         primary_key=["city","timestamp_pk"],
-        description="Pakistan AQI dataset v2 with lag + time features (online enabled)",
+        description="Pakistan AQI dataset v3 with lag + time features (online enabled)",
         online_enabled=True
     )
 
     try:
         aqi_fg.insert(df, write_options={"wait_for_job": True, "online": True})
-        print(f"YAYY!Uploaded {len(df)} rows with {df.shape[1]} columns to Hopsworks Feature Store v2 (offline + online)")
+        print(f"YAYY!Uploaded {len(df)} rows with {df.shape[1]} columns to Hopsworks Feature Store v3 (offline + online)")
     except Exception as e:
         print("SORRY! Insert failed:", e)
