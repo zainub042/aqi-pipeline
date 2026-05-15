@@ -10,6 +10,7 @@ from hsfs import feature
 # ── Config ──────────────────────────────────────────────
 OPENWEATHER_API_KEY = os.environ["OPENWEATHER_API_KEY"]   # set in GitHub Secrets
 HOPSWORKS_API_KEY   = os.environ["HOPSWORKS_API_KEY"]     # set in GitHub Secrets
+HOPSWORKS_HOST = os.environ.get("HOPSWORKS_HOST", "eu-west.cloud.hopsworks.ai")
 PAKISTAN_TZ         = ZoneInfo("Asia/Karachi")
 OUTPUT_FILE         = "pakistan_aqi_data.csv"
 
