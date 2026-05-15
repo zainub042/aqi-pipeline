@@ -110,4 +110,4 @@ if __name__ == "__main__":
     )
 
     aqi_fg.insert(df)
-    print(f"✅ Uploaded {len(df)} rows to Hopsworks Feature Store")
+    print(f"Yayy! Uploaded {len(df)} rows to Hopsworks Feature Store")
