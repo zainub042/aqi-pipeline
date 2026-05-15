@@ -10,7 +10,7 @@ project = hopsworks.login(
     project="TENPSAQI_Ptoject",   # your project name
     host="eu-west.cloud.hopsworks.ai",
     port=443,
-    api_key_value="qw3OQFqdWoXlmMg7.eWEwZhkwhI02m1N82pYfJnozfohPQOlT4F0iTsCx4yzJ5CLAxZa0beyQu6lcjItS"
+    api_key = os.getenv("HOPSWORKS_API_KEY")
 )
 fs = project.get_feature_store()
 
