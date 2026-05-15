@@ -7,7 +7,7 @@ import time
 import hopsworks
 
 # ── Config ──────────────────────────────────────────────
-OPENWEATHER_API_KEY = os.getenv("OPENWEATHER_API_KEY")   # stored in GitHub Secrets
+OPENWEATHER_API_KEY = os.getenv("OPENWEATHER_API_KEY")   # GitHub Secret
 PAKISTAN_TZ = ZoneInfo("Asia/Karachi")
 
 CITIES = [
@@ -48,8 +48,7 @@ def fetch_aqi(city: dict):
     local_now = utc_now.astimezone(PAKISTAN_TZ)
 
     return {
-        "timestamp_pk":  local_now.isoformat(),
-        "timestamp_utc": utc_now.isoformat(),
+        "timestamp_pk":  local_now.isoformat(),   # single timestamp
         "city":       city["name"],
         "lat":        city["lat"],
         "lon":        city["lon"],
@@ -109,5 +108,8 @@ if __name__ == "__main__":
         description="Engineered AQI dataset with lag + time features"
     )
 
-    aqi_fg.insert(df)
-    print(f"Yayy! Uploaded {len(df)} rows to Hopsworks Feature Store")
+    try:
+        aqi_fg.insert(df)
+        print(f"✅ Uploaded {len(df)} rows with {df.shape[1]} columns to Hopsworks Feature Store")
+    except Exception as e:
+        print("❌ Insert failed:", e)
