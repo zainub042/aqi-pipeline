@@ -48,7 +48,7 @@ def fetch_aqi(city: dict):
     local_now = utc_now.astimezone(PAKISTAN_TZ)
 
     return {
-        "timestamp_pk":  local_now.isoformat(),   # single timestamp
+        "timestamp_pk":  local_now,   # store as datetime, not string
         "city":       city["name"],
         "lat":        city["lat"],
         "lon":        city["lon"],
@@ -96,8 +96,14 @@ if __name__ == "__main__":
     df = pd.DataFrame(rows)
     df = add_features(df)
 
+    # Ensure timestamp is proper datetime
+    df["timestamp_pk"] = pd.to_datetime(df["timestamp_pk"])
+
     # ── Upload to Hopsworks Feature Store ─────────────────
     api_key = os.getenv("HOPSWORKS_API_KEY")
+    if not api_key:
+        raise ValueError("BOOO! No HOPSWORKS_API_KEY found in environment variables")
+
     project = hopsworks.login(api_key_value=api_key)
     fs = project.get_feature_store()
 
@@ -105,11 +111,12 @@ if __name__ == "__main__":
         name="pakistan_aqi_features",
         version=1,
         primary_key=["city","timestamp_pk"],
-        description="Engineered AQI dataset with lag + time features"
+        description="Engineered AQI dataset with lag + time features",
+        online_enabled=True
     )
 
     try:
-        aqi_fg.insert(df)
-        print(f"✅ Uploaded {len(df)} rows with {df.shape[1]} columns to Hopsworks Feature Store")
+        aqi_fg.insert(df, write_options={"wait_for_job": True})
+        print(f"Yayyy!Uploaded {len(df)} rows with {df.shape[1]} columns to Hopsworks Feature Store")
     except Exception as e:
-        print("❌ Insert failed:", e)
+        print("SORRY! Insert failed:", e)
