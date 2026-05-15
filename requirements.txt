@@ -1,0 +1,5 @@
+hopsworks
+scikit-learn
+joblib
+pandas
+requests
