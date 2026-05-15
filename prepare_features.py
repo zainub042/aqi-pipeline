@@ -48,7 +48,7 @@ def fetch_aqi(city: dict):
     local_now = utc_now.astimezone(PAKISTAN_TZ)
 
     return {
-        "timestamp_pk":  local_now,   # store as datetime, not string
+        "timestamp_pk":  local_now,   # store as datetime
         "city":       city["name"],
         "lat":        city["lat"],
         "lon":        city["lon"],
@@ -107,6 +107,7 @@ if __name__ == "__main__":
     project = hopsworks.login(api_key_value=api_key)
     fs = project.get_feature_store()
 
+    # 👇 online_enabled=True is critical
     aqi_fg = fs.get_or_create_feature_group(
         name="pakistan_aqi_features",
         version=1,
@@ -116,7 +117,8 @@ if __name__ == "__main__":
     )
 
     try:
-        aqi_fg.insert(df, write_options={"wait_for_job": True})
-        print(f"Yayyy!Uploaded {len(df)} rows with {df.shape[1]} columns to Hopsworks Feature Store")
+        # 👇 Force insert into both offline + online
+        aqi_fg.insert(df, write_options={"wait_for_job": True, "online": True})
+        print(f"YAYYY! Uploaded {len(df)} rows with {df.shape[1]} columns to Hopsworks Feature Store (offline + online)")
     except Exception as e:
-        print("SORRY! Insert failed:", e)
+        print("SORRY!Insert failed:", e)
