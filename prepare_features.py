@@ -126,48 +126,54 @@ if __name__ == "__main__":
     df["aqi_change"] = df["aqi_change"].astype("float32")
 
     # ── Upload to Hopsworks ──────────────────────────────
-    project = hopsworks.login(api_key_value=HOPSWORKS_API_KEY)
-    fs = project.get_feature_store()
+project = hopsworks.login(api_key_value=HOPSWORKS_API_KEY)
+fs = project.get_feature_store()
 
-    features = [
-        feature.Feature("city", "STRING"),
-        feature.Feature("timestamp_pk", "TIMESTAMP"),
-        feature.Feature("lat", "FLOAT"),
-        feature.Feature("lon", "FLOAT"),
-        feature.Feature("aqi", "INT"),
-        feature.Feature("aqi_label", "STRING"),
-        feature.Feature("co", "FLOAT"),
-        feature.Feature("no", "FLOAT"),
-        feature.Feature("no2", "FLOAT"),
-        feature.Feature("o3", "FLOAT"),
-        feature.Feature("so2", "FLOAT"),
-        feature.Feature("pm2_5", "FLOAT"),
-        feature.Feature("pm10", "FLOAT"),
-        feature.Feature("nh3", "FLOAT"),
-        feature.Feature("hour", "INT"),
-        feature.Feature("day", "INT"),
-        feature.Feature("month", "INT"),
-        feature.Feature("day_of_week", "INT"),
-        feature.Feature("is_weekend", "INT"),
-        feature.Feature("aqi_lag1", "FLOAT"),
-        feature.Feature("aqi_change", "FLOAT"),
-    ]
+features = [
+    feature.Feature("city", "STRING"),
+    feature.Feature("timestamp_pk", "TIMESTAMP"),
+    feature.Feature("lat", "FLOAT"),
+    feature.Feature("lon", "FLOAT"),
+    feature.Feature("aqi", "INT"),
+    feature.Feature("aqi_label", "STRING"),
+    feature.Feature("co", "FLOAT"),
+    feature.Feature("no", "FLOAT"),
+    feature.Feature("no2", "FLOAT"),
+    feature.Feature("o3", "FLOAT"),
+    feature.Feature("so2", "FLOAT"),
+    feature.Feature("pm2_5", "FLOAT"),
+    feature.Feature("pm10", "FLOAT"),
+    feature.Feature("nh3", "FLOAT"),
+    feature.Feature("hour", "INT"),
+    feature.Feature("day", "INT"),
+    feature.Feature("month", "INT"),
+    feature.Feature("day_of_week", "INT"),
+    feature.Feature("is_weekend", "INT"),
+    feature.Feature("aqi_lag1", "FLOAT"),
+    feature.Feature("aqi_change", "FLOAT"),
+]
 
-    # Create once, otherwise get existing
-    try:
-        aqi_fg = fs.get_feature_group(name="pakistan_aqi_features", version=2)
-    except:
-        aqi_fg = fs.create_feature_group(
-            name="pakistan_aqi_features",
-            version=2,
-            primary_key=["city","timestamp_pk"],
-            description="Pakistan AQI dataset v2 with lag + time features (online enabled)",
-            online_enabled=True,
-            features=features
-        )
+# Create once, otherwise get existing
+try:
+    aqi_fg = fs.get_feature_group(name="pakistan_aqi_features", version=2)
+except:
+    aqi_fg = fs.create_feature_group(
+        name="pakistan_aqi_features",
+        version=2,
+        primary_key=["city","timestamp_pk"],
+        description="Pakistan AQI dataset v2 with lag + time features (online enabled)",
+        online_enabled=True,
+        features=features
+    )
 
-    try:
-        aqi_fg.insert(df, write_options={"wait_for_job": True, "online": True})
-        print(f"🚀 Uploaded {len(df)} rows with {df.shape[1]} columns to Hopsworks Feature Store v2 (offline + online)")
-    except Exception as e:
-        print("❌ Insert failed:", e)
+try:
+    aqi_fg.insert(df, write_options={"wait_for_job": True, "online": True})
+    print(f"🚀 Uploaded {len(df)} rows with {df.shape[1]} columns to Hopsworks Feature Store v2 (offline + online)")
+
+    # ── Row count check ──────────────────────────────
+    df_offline = aqi_fg.read()
+    print(f"📊 Total rows in Feature Group: {len(df_offline)}")
+    print(df_offline.tail(5))  # show last 5 rows for confirmation
+
+except Exception as e:
+    print("❌ Insert failed:", e)
