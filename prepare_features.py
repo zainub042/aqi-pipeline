@@ -141,7 +141,10 @@ if __name__ == "__main__":
     df = cast_dtypes(df)
 
     # 6. Connect to Hopsworks
-    project = hopsworks.login(api_key_value=HOPSWORKS_API_KEY)
+    project = hopsworks.login(
+    host=HOPSWORKS_HOST,
+    api_key_value=HOPSWORKS_API_KEY
+)
     fs      = project.get_feature_store()
 
     features_schema = [
