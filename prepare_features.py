@@ -7,7 +7,7 @@ import time
 import hopsworks
 
 # ── Config ──────────────────────────────────────────────
-OPENWEATHER_API_KEY = os.getenv("OPENWEATHER_API_KEY")   # GitHub Secret
+OPENWEATHER_API_KEY = os.getenv("OPENWEATHER_API_KEY")
 PAKISTAN_TZ = ZoneInfo("Asia/Karachi")
 
 CITIES = [
@@ -24,10 +24,7 @@ AQI_LABELS = {1: "Good", 2: "Fair", 3: "Moderate", 4: "Poor", 5: "Very Poor"}
 
 # ── Fetch AQI for one city ──────────────────────────────
 def fetch_aqi(city: dict):
-    url = (
-        f"http://api.openweathermap.org/data/2.5/air_pollution"
-        f"?lat={city['lat']}&lon={city['lon']}&appid={OPENWEATHER_API_KEY}"
-    )
+    url = f"http://api.openweathermap.org/data/2.5/air_pollution?lat={city['lat']}&lon={city['lon']}&appid={OPENWEATHER_API_KEY}"
     try:
         resp = requests.get(url, timeout=10)
         resp.raise_for_status()
@@ -48,20 +45,20 @@ def fetch_aqi(city: dict):
     local_now = utc_now.astimezone(PAKISTAN_TZ)
 
     return {
-        "timestamp_pk":  local_now,   # store as datetime
-        "city":       city["name"],
-        "lat":        city["lat"],
-        "lon":        city["lon"],
-        "aqi":        aqi,
-        "aqi_label":  AQI_LABELS.get(aqi, "Unknown"),
-        "co":         comp.get("co"),
-        "no":         comp.get("no"),
-        "no2":        comp.get("no2"),
-        "o3":         comp.get("o3"),
-        "so2":        comp.get("so2"),
-        "pm2_5":      comp.get("pm2_5"),
-        "pm10":       comp.get("pm10"),
-        "nh3":        comp.get("nh3"),
+        "timestamp_pk": local_now,   # datetime object
+        "city": city["name"],
+        "lat": city["lat"],
+        "lon": city["lon"],
+        "aqi": aqi,
+        "aqi_label": AQI_LABELS.get(aqi, "Unknown"),
+        "co": comp.get("co"),
+        "no": comp.get("no"),
+        "no2": comp.get("no2"),
+        "o3": comp.get("o3"),
+        "so2": comp.get("so2"),
+        "pm2_5": comp.get("pm2_5"),
+        "pm10": comp.get("pm10"),
+        "nh3": comp.get("nh3"),
     }
 
 # ── Add time + lag features ──────────────────────────────
@@ -73,7 +70,6 @@ def add_features(df: pd.DataFrame) -> pd.DataFrame:
     df["day_of_week"] = dt.dt.dayofweek
     df["is_weekend"]  = (dt.dt.dayofweek >= 5).astype(int)
 
-    # Lag features per city
     df = df.sort_values(["city","timestamp_pk"])
     df["aqi_lag1"] = df.groupby("city")["aqi"].shift(1)
     df["aqi_change"] = df["aqi"] - df["aqi_lag1"]
@@ -95,30 +91,26 @@ if __name__ == "__main__":
 
     df = pd.DataFrame(rows)
     df = add_features(df)
-
-    # Ensure timestamp is proper datetime
     df["timestamp_pk"] = pd.to_datetime(df["timestamp_pk"])
 
-    # ── Upload to Hopsworks Feature Store ─────────────────
     api_key = os.getenv("HOPSWORKS_API_KEY")
     if not api_key:
-        raise ValueError("BOOO! No HOPSWORKS_API_KEY found in environment variables")
+        raise ValueError("BOO! No HOPSWORKS_API_KEY found in environment variables")
 
     project = hopsworks.login(api_key_value=api_key)
     fs = project.get_feature_store()
 
-    # 👇 online_enabled=True is critical
-    aqi_fg = fs.get_or_create_feature_group(
+    # 👇 NEW VERSION 2 with online enabled
+    aqi_fg = fs.create_feature_group(
         name="pakistan_aqi_features",
-        version=1,
+        version=2,
         primary_key=["city","timestamp_pk"],
-        description="Engineered AQI dataset with lag + time features",
+        description="Pakistan AQI dataset v2 with lag + time features (online enabled)",
         online_enabled=True
     )
 
     try:
-        # 👇 Force insert into both offline + online
         aqi_fg.insert(df, write_options={"wait_for_job": True, "online": True})
-        print(f"YAYYY! Uploaded {len(df)} rows with {df.shape[1]} columns to Hopsworks Feature Store (offline + online)")
+        print(f"YAYY!Uploaded {len(df)} rows with {df.shape[1]} columns to Hopsworks Feature Store v2 (offline + online)")
     except Exception as e:
-        print("SORRY!Insert failed:", e)
+        print("SORRY! Insert failed:", e)
