@@ -100,10 +100,10 @@ if __name__ == "__main__":
     df["city"] = df["city"].astype(str).str.strip()
     df["timestamp_pk"] = pd.to_datetime(df["timestamp_pk"])
 
-    # Save locally
+    # Save locally (for debugging only)
     file_exists = os.path.isfile(OUTPUT_FILE)
     df.to_csv(OUTPUT_FILE, mode="a", header=not file_exists, index=False)
-    print(f"LESS GO! Saved {len(df)} rows → {OUTPUT_FILE}")
+    print(f"✅ Saved {len(df)} rows → {OUTPUT_FILE}")
 
     # ── Force correct dtypes for Hopsworks ──────────────────────────────
     df["lat"] = df["lat"].astype("float32")
@@ -153,17 +153,21 @@ if __name__ == "__main__":
         feature.Feature("aqi_change", "FLOAT"),
     ]
 
-    aqi_fg = fs.create_feature_group(
-        name="pakistan_aqi_features",
-        version=2,
-        primary_key=["city","timestamp_pk"],
-        description="Pakistan AQI dataset v2 with lag + time features (online enabled)",
-        online_enabled=True,
-        features=features
-    )
+    # Create once, otherwise get existing
+    try:
+        aqi_fg = fs.get_feature_group(name="pakistan_aqi_features", version=2)
+    except:
+        aqi_fg = fs.create_feature_group(
+            name="pakistan_aqi_features",
+            version=2,
+            primary_key=["city","timestamp_pk"],
+            description="Pakistan AQI dataset v2 with lag + time features (online enabled)",
+            online_enabled=True,
+            features=features
+        )
 
     try:
         aqi_fg.insert(df, write_options={"wait_for_job": True, "online": True})
-        print(f"YAYYYY! Uploaded {len(df)} rows with {df.shape[1]} columns to Hopsworks Feature Store v2 (offline + online)")
+        print(f"🚀 Uploaded {len(df)} rows with {df.shape[1]} columns to Hopsworks Feature Store v2 (offline + online)")
     except Exception as e:
-        print("SORRY! Insert failed:", e)
+        print("❌ Insert failed:", e)
