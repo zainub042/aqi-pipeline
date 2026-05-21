@@ -8,7 +8,7 @@ on:
 jobs:
   fetch-and-upload:
     runs-on: ubuntu-latest
-    timeout-minutes: 15        # ← KILLS job after 15 mins, no more 6hr runs
+    timeout-minutes: 15        
 
     steps:
       - name: Checkout repository
@@ -35,5 +35,5 @@ jobs:
         env:
           OPENWEATHER_API_KEY: ${{ secrets.OPENWEATHER_API_KEY }}
           HOPSWORKS_API_KEY:   ${{ secrets.HOPSWORKS_API_KEY }}
-          HOPSWORKS_HOST:      ${{ secrets.HOPSWORKS_HOST }}    # ← was missing!
+          HOPSWORKS_HOST:      ${{ secrets.HOPSWORKS_HOST }}   
         run: python prepare_features.py
