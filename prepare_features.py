@@ -4,15 +4,17 @@ import requests
 import pandas as pd
 from datetime import datetime
 from zoneinfo import ZoneInfo
-import hopsworks
-from hsfs import feature
+from pymongo import MongoClient
 
 # ── Config ──────────────────────────────────────────────
 OPENWEATHER_API_KEY = os.environ["OPENWEATHER_API_KEY"]   # set in GitHub Secrets
-HOPSWORKS_API_KEY   = os.environ["HOPSWORKS_API_KEY"]     # set in GitHub Secrets
-HOPSWORKS_HOST = os.environ.get("HOPSWORKS_HOST", "eu-west.cloud.hopsworks.ai")
+MONGO_URI           = os.environ["MONGO_URI"]             # set in GitHub Secrets
 PAKISTAN_TZ         = ZoneInfo("Asia/Karachi")
 OUTPUT_FILE         = "pakistan_aqi_data.csv"
+
+client = MongoClient(MONGO_URI)
+db = client["aqi_db"]
+collection = db["pakistan_aqi"]
 
 CITIES = [
     {"name": "Karachi",    "lat": 24.8607, "lon": 67.0011},
@@ -86,29 +88,6 @@ def add_features(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
-# ── Force correct dtypes ─────────────────────────────────
-def cast_dtypes(df: pd.DataFrame) -> pd.DataFrame:
-    df["lat"]        = df["lat"].astype("float32")
-    df["lon"]        = df["lon"].astype("float32")
-    df["aqi"]        = df["aqi"].astype("int32")
-    df["co"]         = df["co"].astype("float32")
-    df["no"]         = df["no"].astype("float32")
-    df["no2"]        = df["no2"].astype("float32")
-    df["o3"]         = df["o3"].astype("float32")
-    df["so2"]        = df["so2"].astype("float32")
-    df["pm2_5"]      = df["pm2_5"].astype("float32")
-    df["pm10"]       = df["pm10"].astype("float32")
-    df["nh3"]        = df["nh3"].astype("float32")
-    df["hour"]       = df["hour"].astype("int32")
-    df["day"]        = df["day"].astype("int32")
-    df["month"]      = df["month"].astype("int32")
-    df["day_of_week"]= df["day_of_week"].astype("int32")
-    df["is_weekend"] = df["is_weekend"].astype("int32")
-    df["aqi_lag1"]   = df["aqi_lag1"].astype("float32")
-    df["aqi_change"] = df["aqi_change"].astype("float32")
-    return df
-
-
 # ── Main ─────────────────────────────────────────────────
 if __name__ == "__main__":
 
@@ -133,68 +112,16 @@ if __name__ == "__main__":
     df["city"]         = df["city"].astype(str).str.strip()
     df["timestamp_pk"] = pd.to_datetime(df["timestamp_pk"])
 
-    # 4. Save locally (appends each run so you keep a local history too)
+    # 4. Save locally (optional history)
     file_exists = os.path.isfile(OUTPUT_FILE)
     df.to_csv(OUTPUT_FILE, mode="a", header=not file_exists, index=False)
     print(f"✅ Saved {len(df)} rows → {OUTPUT_FILE}")
 
-    # 5. Cast dtypes for Hopsworks
-    df = cast_dtypes(df)
-
-    # 6. Connect to Hopsworks
-    project = hopsworks.login(
-    host=HOPSWORKS_HOST,
-    api_key_value=HOPSWORKS_API_KEY
-)
-    fs      = project.get_feature_store()
-
-    features_schema = [
-        feature.Feature("city",         "STRING"),
-        feature.Feature("timestamp_pk", "TIMESTAMP"),
-        feature.Feature("lat",          "FLOAT"),
-        feature.Feature("lon",          "FLOAT"),
-        feature.Feature("aqi",          "INT"),
-        feature.Feature("aqi_label",    "STRING"),
-        feature.Feature("co",           "FLOAT"),
-        feature.Feature("no",           "FLOAT"),
-        feature.Feature("no2",          "FLOAT"),
-        feature.Feature("o3",           "FLOAT"),
-        feature.Feature("so2",          "FLOAT"),
-        feature.Feature("pm2_5",        "FLOAT"),
-        feature.Feature("pm10",         "FLOAT"),
-        feature.Feature("nh3",          "FLOAT"),
-        feature.Feature("hour",         "INT"),
-        feature.Feature("day",          "INT"),
-        feature.Feature("month",        "INT"),
-        feature.Feature("day_of_week",  "INT"),
-        feature.Feature("is_weekend",   "INT"),
-        feature.Feature("aqi_lag1",     "FLOAT"),
-        feature.Feature("aqi_change",   "FLOAT"),
-    ]
-
-    # 7. Get existing feature group or create it
+    # 5. Insert into MongoDB
     try:
-        aqi_fg = fs.get_feature_group(name="pakistan_aqi_features", version=2)
-        print("📦 Using existing feature group v2")
-    except Exception:
-        aqi_fg = fs.create_feature_group(
-            name="pakistan_aqi_features",
-            version=2,
-            primary_key=["city", "timestamp_pk"],
-            description="Pakistan AQI dataset v2 with lag + time features (online enabled)",
-            online_enabled=True,
-            features=features_schema,
-        )
-        print("🆕 Created new feature group v2")
-
-    # 8. Insert rows
-    try:
-        aqi_fg.insert(df, write_options={"wait_for_job": False})
-        print(f"🚀 Uploaded {len(df)} rows ({df.shape[1]} cols) → Hopsworks Feature Store v2")
-
-        df_offline = aqi_fg.read()
-        print(f"📊 Total rows in Feature Group: {len(df_offline)}")
-        print(df_offline.tail(5))
+        records = df.to_dict("records")
+        collection.insert_many(records)
+        print(f"🚀 Uploaded {len(records)} rows → MongoDB Atlas")
     except Exception as e:
         print(f"❌ Insert failed: {e}")
         exit(1)
