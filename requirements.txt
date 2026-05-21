@@ -3,3 +3,5 @@ scikit-learn==1.4.2
 joblib==1.4.2
 pandas==2.1.4
 requests==2.31.0
+pymongo==4.17.0
+dnspython==2.7.0
