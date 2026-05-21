@@ -207,35 +207,29 @@ def load_data():
 def load_model(filename="random_forest.pkl"):
     try:
         client, db, fs_grid = get_mongo()
-
-        # Load model
-        model_file = fs_grid.find_one(
-            {"filename": filename},
-            sort=[("uploadDate", -1)]
-        )
+        model_file = fs_grid.find_one({"filename": filename}, sort=[("uploadDate", -1)])
         if model_file is None:
-            st.warning(f"Model {filename} not found in MongoDB.")
             return None, None
 
         tmp_model = f"/tmp/{filename}"
         with open(tmp_model, "wb") as f:
             f.write(model_file.read())
 
-        # Load scaler
-        scaler_file = fs_grid.find_one(
-            {"filename": "scaler.pkl"},
-            sort=[("uploadDate", -1)]
-        )
+        scaler_file = fs_grid.find_one({"filename": "scaler.pkl"}, sort=[("uploadDate", -1)])
         tmp_scaler = "/tmp/scaler.pkl"
         with open(tmp_scaler, "wb") as f:
             f.write(scaler_file.read())
 
         client.close()
 
-        # Load LSTM differently
+        # ✅ Handle LSTM gracefully
         if filename.endswith(".keras"):
-            import tensorflow as tf
-            model = tf.keras.models.load_model(tmp_model)
+            try:
+                import tensorflow as tf
+                model = tf.keras.models.load_model(tmp_model)
+            except ImportError:
+                st.warning("LSTM not available — tensorflow not installed.")
+                return None, None
         else:
             model = joblib.load(tmp_model)
 
