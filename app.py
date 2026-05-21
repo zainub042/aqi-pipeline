@@ -179,8 +179,8 @@ def load_data():
         client, db, _ = get_mongo()
         collection = db["pakistan_aqi"]
 
-        # Load last 30 days
-        cutoff = datetime.utcnow() - timedelta(days=30)
+        # Load last 90 days
+        cutoff = datetime.utcnow() - timedelta(days=90)
         cursor = collection.find(
             {"timestamp_pk": {"$gte": cutoff}},
             {"_id": 0}
@@ -509,7 +509,7 @@ with tab2:
 # ── TAB 3 ─────────────────────────────────────────────────
 with tab3:
     st.markdown('<div class="section-title">3-day AQI forecast — all cities</div>', unsafe_allow_html=True)
-    st.info("Predictions made using Gradient Boosting (R²=0.9842, RMSE=0.0955) — best performing model trained on 30 days of historical data.")
+    st.info("Predictions made using Random Forest (R²=0.9813, RMSE=0.1035) — best performing model trained on 90 days of historical data.")
 
     cols = st.columns(len(CITIES))
     for col, c in zip(cols, CITIES):
@@ -526,10 +526,10 @@ with tab3:
 
     st.markdown('<br><div class="section-title">Model performance summary</div>', unsafe_allow_html=True)
     perf_df = pd.DataFrame({
-        'Model': ['Gradient Boosting', 'Random Forest', 'Ridge Regression'],
-        'RMSE':  [0.0955, 0.1007, 0.2828],
-        'MAE':   [0.0226, 0.0243, 0.1846],
-        'R²':    [0.9842, 0.9824, 0.8612],
+        'Model': ['Random Forest','Gradient Boosting', 'Ridge Regression'],
+        'RMSE':  [0.1035, 0.1067, 0.2773],
+        'MAE':   [0.0197, 0.0203, 0.1769 ],
+        'R²':    [0.9813, 0.9801,  0.8657],
     })
     st.dataframe(perf_df.style.highlight_max(subset=['R²'], color='#d9f7be')
                               .highlight_min(subset=['RMSE','MAE'], color='#d9f7be'),
