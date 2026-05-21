@@ -167,7 +167,7 @@ PLOT_LAYOUT = dict(
 def get_mongo():
     MONGO_URI = os.environ.get("MONGO_URI")
     client  = MongoClient(MONGO_URI)
-    db      = client["aqi_db"]
+    db      = client["aqi_project"]
     fs_grid = gridfs.GridFS(db)
     return client, db, fs_grid
 
@@ -177,7 +177,7 @@ def get_mongo():
 def load_data():
     try:
         client, db, _ = get_mongo()
-        collection = db["pakistan_aqi"]
+        collection = db["aqi_data"]
 
         # Load last 90 days
         cutoff = datetime.utcnow() - timedelta(days=90)
@@ -509,7 +509,7 @@ with tab2:
 # ── TAB 3 ─────────────────────────────────────────────────
 with tab3:
     st.markdown('<div class="section-title">3-day AQI forecast — all cities</div>', unsafe_allow_html=True)
-    st.info("Predictions made using Random Forest (R²=0.9813, RMSE=0.1035) — best performing model trained on 90 days of historical data.")
+    st.info("Predictions made using Random Forest (R²=0.9584, RMSE=0.2653) — best performing model trained on 90 days of historical data.")
 
     cols = st.columns(len(CITIES))
     for col, c in zip(cols, CITIES):
@@ -527,9 +527,9 @@ with tab3:
     st.markdown('<br><div class="section-title">Model performance summary</div>', unsafe_allow_html=True)
     perf_df = pd.DataFrame({
         'Model': ['Random Forest','Gradient Boosting', 'Ridge Regression'],
-        'RMSE':  [0.1035, 0.1067, 0.2773],
-        'MAE':   [0.0197, 0.0203, 0.1769 ],
-        'R²':    [0.9813, 0.9801,  0.8657],
+        'RMSE':  [0.1589, 0.2116 , 0.2653 ],
+        'MAE':   [0.051,  0.0753, 0.1421 ],
+        'R²':    [ 0.9584, 0.9262, 0.8839],
     })
     st.dataframe(perf_df.style.highlight_max(subset=['R²'], color='#d9f7be')
                               .highlight_min(subset=['RMSE','MAE'], color='#d9f7be'),
