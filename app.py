@@ -222,6 +222,15 @@ def load_model(filename="random_forest.pkl"):
 
         client.close()
 
+        # Load both model and scaler
+        model = joblib.load(tmp_model)
+        scaler = joblib.load(tmp_scaler)
+        return model, scaler
+
+    except Exception as e:
+        st.error(f"Could not load model {filename}: {e}")
+        return None, None
+
 
 
 # ── Forecast & Alerts ────────────────────────────────────
