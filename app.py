@@ -171,7 +171,6 @@ def get_mongo():
     fs_grid = gridfs.GridFS(db)
     return client, db, fs_grid
 
-
 # ── Data loading from MongoDB ────────────────────────────
 @st.cache_data(ttl=600)   # refresh every 10 minutes
 def load_data():
@@ -193,13 +192,20 @@ def load_data():
             st.error("No data found in MongoDB.")
             return pd.DataFrame()
 
+        # ✅ Add engineered time features here
         df['timestamp_pk'] = pd.to_datetime(df['timestamp_pk'], utc=True)
         df = df.sort_values(['city', 'timestamp_pk']).reset_index(drop=True)
+        df['hour']        = df['timestamp_pk'].dt.hour
+        df['day_of_week'] = df['timestamp_pk'].dt.dayofweek
+        df['is_weekend']  = (df['day_of_week'] >= 5).astype(int)
+
         return df
 
     except Exception as e:
         st.error(f"Could not load data from MongoDB: {e}")
         return pd.DataFrame()
+
+
 
 
 # ── Model loading from MongoDB GridFS ───────────────────
