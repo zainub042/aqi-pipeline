@@ -446,7 +446,7 @@ with tab1:
 
 # ── TAB 2 ─────────────────────────────────────────────────
 with tab2:
-    st.markdown('<div class="section-title">All cities — average AQI (last 30 days)</div>', unsafe_allow_html=True)
+    st.markdown('<div class="section-title">All cities — average AQI (last 90 days)</div>', unsafe_allow_html=True)
     city_avg = df.groupby('city')['aqi'].mean().sort_values(ascending=False).reset_index()
     city_avg.columns = ['City','Avg AQI']
     city_avg['Avg AQI'] = city_avg['Avg AQI'].round(2)
