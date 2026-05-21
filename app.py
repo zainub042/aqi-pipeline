@@ -301,22 +301,21 @@ tab1,tab2,tab3,tab4,tab5 = st.tabs([" Live Dashboard"," City Comparison"," Forec
 
 # ── TAB 1: Live Dashboard ────────────────────────────────
 with tab1:
-    col_city,col_poll,col_model = st.columns(3)
-    city = col_city.selectbox("🏙️ Select city",CITIES,index=5)
-    selected_poll = col_poll.selectbox(" Select pollutant",["All pollutants"]+[POLL_LABELS[p] for p in POLLUTANTS])
-    selected_model = col_model.selectbox(" Model used",["Random Forest","Gradient Boosting","Ridge Regression","LSTM"])
+    col_city, col_poll, col_model = st.columns(3)
+    city = col_city.selectbox("🏙️ Select city", CITIES, index=5)
+    selected_poll = col_poll.selectbox(" Select pollutant", ["All pollutants"]+[POLL_LABELS[p] for p in POLLUTANTS])
+    selected_model = col_model.selectbox(" Model used", ["Random Forest","Gradient Boosting","Ridge Regression"])
 
     # choose model only for Live Dashboard
-    # choose model only for Live Dashboard
-   if selected_model == "Random Forest":
-    model, scaler, is_lstm = model_rf, scaler_rf, False
-   elif selected_model == "Gradient Boosting":
-    model, scaler, is_lstm = model_gb, scaler_gb, False
-   elif selected_model == "Ridge Regression":
-    model, scaler, is_lstm = model_rr, scaler_rr, False
-   else:
-    st.error("❌ Selected model not available")
-    model, scaler, is_lstm = None, None, False
+    if selected_model == "Random Forest":
+        model, scaler = model_rf, scaler_rf
+    elif selected_model == "Gradient Boosting":
+        model, scaler = model_gb, scaler_gb
+    elif selected_model == "Ridge Regression":
+        model, scaler = model_rr, scaler_rr
+    else:
+        st.error("❌ Selected model not available")
+        model, scaler = None, None
 
 
 
