@@ -307,9 +307,16 @@ with tab1:
     selected_model = col_model.selectbox(" Model used",["Random Forest","Gradient Boosting","Ridge Regression","LSTM"])
 
     # choose model only for Live Dashboard
-    if selected_model == "Random Forest":   model, scaler, is_lstm = model_rf,   scaler_rf,   False
-    elif selected_model == "Gradient Boosting": model, scaler, is_lstm = model_gb,   scaler_gb,   False
-    else selected_model == "Ridge Regression":  model, scaler, is_lstm = model_rr,   scaler_rr,   True
+    if selected_model == "Random Forest":
+    model, scaler, is_lstm = model_rf, scaler_rf, False
+   elif selected_model == "Gradient Boosting":
+    model, scaler, is_lstm = model_gb, scaler_gb, False
+   elif selected_model == "Ridge Regression":
+    model, scaler, is_lstm = model_rr, scaler_rr, False
+    else:
+    st.error("❌ Selected model not available")
+    model, scaler, is_lstm = None, None, False
+
 
 
     city_df = df[df['city']==city].sort_values('timestamp_pk')
