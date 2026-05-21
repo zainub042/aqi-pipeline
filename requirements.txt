@@ -5,3 +5,9 @@ pandas==2.1.4
 requests==2.31.0
 pymongo==4.17.0
 dnspython==2.7.0
+streamlit
+plotly
+numpy
+shap
+streamlit-autorefresh
+tensorflow
