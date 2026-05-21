@@ -31,9 +31,8 @@ jobs:
         run: pip install -r requirements.txt
 
       - name: Run AQI pipeline
-        timeout-minutes: 10    # ← step level timeout too
+        timeout-minutes: 10
         env:
           OPENWEATHER_API_KEY: ${{ secrets.OPENWEATHER_API_KEY }}
-          HOPSWORKS_API_KEY:   ${{ secrets.HOPSWORKS_API_KEY }}
-          HOPSWORKS_HOST:      ${{ secrets.HOPSWORKS_HOST }}   
+          MONGO_URI:           ${{ secrets.MONGO_URI }}
         run: python prepare_features.py
