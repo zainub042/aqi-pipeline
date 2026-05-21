@@ -165,7 +165,7 @@ PLOT_LAYOUT = dict(
 
 # ── MongoDB connection ────────────────────────────────────
 def get_mongo():
-     MONGO_URI = os.environ.get("MONGO_URI")
+    MONGO_URI = os.environ.get("MONGO_URI")
     client  = MongoClient(MONGO_URI)
     db      = client["aqi_db"]
     fs_grid = gridfs.GridFS(db)
