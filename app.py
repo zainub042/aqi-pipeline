@@ -222,23 +222,6 @@ def load_model(filename="random_forest.pkl"):
 
         client.close()
 
-        # ✅ Handle LSTM gracefully
-        if filename.endswith(".keras"):
-            try:
-                import tensorflow as tf
-                model = tf.keras.models.load_model(tmp_model)
-            except ImportError:
-                st.warning("LSTM not available — tensorflow not installed.")
-                return None, None
-        else:
-            model = joblib.load(tmp_model)
-
-        scaler = joblib.load(tmp_scaler)
-        return model, scaler
-
-    except Exception as e:
-        st.warning(f"Model {filename} not loaded: {e}")
-        return None, None
 
 
 # ── Forecast & Alerts ────────────────────────────────────
@@ -302,7 +285,6 @@ with st.spinner("Loading data from MongoDB..."):
     model_rf,  scaler_rf  = load_model("random_forest.pkl")
     model_gb,  scaler_gb  = load_model("gradient_boosting.pkl")
     model_rr,  scaler_rr  = load_model("ridge_regression.pkl")
-    model_lstm, scaler_lstm = load_model("lstm_model.keras")
 
 if df.empty: st.stop()
 
@@ -318,8 +300,8 @@ with tab1:
     # choose model only for Live Dashboard
     if selected_model == "Random Forest":   model, scaler, is_lstm = model_rf,   scaler_rf,   False
     elif selected_model == "Gradient Boosting": model, scaler, is_lstm = model_gb,   scaler_gb,   False
-    elif selected_model == "Ridge Regression":  model, scaler, is_lstm = model_rr,   scaler_rr,   False
-    else:  model, scaler, is_lstm = model_lstm, scaler_lstm, True
+    else selected_model == "Ridge Regression":  model, scaler, is_lstm = model_rr,   scaler_rr,   True
+
 
     city_df = df[df['city']==city].sort_values('timestamp_pk')
     latest = city_df.iloc[-1] if not city_df.empty else None
@@ -427,7 +409,7 @@ with tab1:
         # Forecast (selected model)
         with p2:
             st.markdown('<div class="section-title">3-day AQI forecast</div>', unsafe_allow_html=True)
-            forecasts = predict_forecast(df, city, model, scaler, is_lstm=is_lstm)
+            forecasts = predict_forecast(df, city, model, scaler)
             fc1, fc2, fc3 = st.columns(3)
             for col, day, aqi_f in zip([fc1,fc2,fc3], ["Today","Tomorrow","Day 3"], forecasts):
                 with col:
@@ -527,10 +509,10 @@ with tab3:
 
     st.markdown('<br><div class="section-title">Model performance summary</div>', unsafe_allow_html=True)
     perf_df = pd.DataFrame({
-        'Model': ['Gradient Boosting', 'Random Forest', 'LSTM', 'Ridge Regression'],
-        'RMSE':  [0.0955, 0.1007, 0.3214, 0.2828],
-        'MAE':   [0.0226, 0.0243, 0.1033, 0.1846],
-        'R²':    [0.9842, 0.9824, 0.8207, 0.8612],
+        'Model': ['Gradient Boosting', 'Random Forest', 'Ridge Regression'],
+        'RMSE':  [0.0955, 0.1007, 0.2828],
+        'MAE':   [0.0226, 0.0243, 0.1846],
+        'R²':    [0.9842, 0.9824, 0.8612],
     })
     st.dataframe(perf_df.style.highlight_max(subset=['R²'], color='#d9f7be')
                               .highlight_min(subset=['RMSE','MAE'], color='#d9f7be'),
