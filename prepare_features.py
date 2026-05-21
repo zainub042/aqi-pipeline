@@ -189,7 +189,7 @@ if __name__ == "__main__":
 
     # 8. Insert rows
     try:
-        aqi_fg.insert(df, write_options={"wait_for_job": True, "online": True})
+        aqi_fg.insert(df, write_options={"wait_for_job": False})
         print(f"🚀 Uploaded {len(df)} rows ({df.shape[1]} cols) → Hopsworks Feature Store v2")
 
         df_offline = aqi_fg.read()
