@@ -34,4 +34,4 @@ jobs:
         timeout-minutes: 25
         env:
           MONGO_URI: ${{ secrets.MONGO_URI }}
-        run: python training_pipeline (1).py
+        run: python training_pipeline.py
