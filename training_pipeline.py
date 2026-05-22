@@ -110,7 +110,7 @@ print(f"Loaded {len(df)} rows across {df['city'].nunique()} cities")
 # ── Step 2: Feature engineering ──────────────────────────
 print("\nEngineering features...")
 
-# ✅ Fix aqi_lag1 NaN — use current aqi as fallback
+#  Fix aqi_lag1 NaN — use current aqi as fallback
 df['aqi_lag1'] = df.groupby('city')['aqi'].shift(1)
 df['aqi_lag1'] = df['aqi_lag1'].fillna(df['aqi'])
 
