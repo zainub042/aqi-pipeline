@@ -532,27 +532,7 @@ with tab2:
     st.plotly_chart(fig_heat, use_container_width=True)
 
 
-
-
-# ── TAB 3 ─────────────────────────────────────────────────
-with tab3:
-    st.markdown('<div class="section-title">3-day AQI forecast — all cities</div>', unsafe_allow_html=True)
-    st.info("Predictions made using Random Forest (R²=0.9584, RMSE=0.2653) — best performing model trained on 90 days of historical data.")
-
-    cols = st.columns(len(CITIES))
-    for col, c in zip(cols, CITIES):
-        forecasts = predict_forecast(df, c, model_gb, scaler_gb, is_lstm=False)
-        with col:
-            st.markdown(f"**{c}**")
-            for day, aqi_f in zip(["Today","Tmrw","Day 3"], forecasts):
-                st.markdown(f"""
-                <div class="forecast-card" style="margin-bottom:8px;">
-                    <div style="font-size:11px;color:#888;">{day}</div>
-                    <div style="font-size:24px;font-weight:600;color:{AQI_COLORS.get(aqi_f,'#888')};">{aqi_f}</div>
-                    <div style="font-size:11px;color:#666;">{AQI_LABELS.get(aqi_f,'')}</div>
-                </div>""", unsafe_allow_html=True)
-
-       # ── TAB 3 ─────────────────────────────────────────────────
+ # ── TAB 3 ─────────────────────────────────────────────────
 with tab3:
 
     metrics_df = load_metrics()
