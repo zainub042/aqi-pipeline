@@ -192,7 +192,7 @@ def load_data():
             st.error("No data found in MongoDB.")
             return pd.DataFrame()
 
-        # ✅ Add engineered time features here
+       
         df['timestamp_pk'] = pd.to_datetime(df['timestamp_pk'], utc=True)
         df = df.sort_values(['city', 'timestamp_pk']).reset_index(drop=True)
         df['hour']        = df['timestamp_pk'].dt.hour
@@ -237,8 +237,30 @@ def load_model(filename="random_forest.pkl"):
         st.error(f"Could not load model {filename}: {e}")
         return None, None
 
-
-
+@st.cache_data(ttl=600)
+def load_metrics():
+    try:
+        client, db, fs_grid = get_mongo()
+        metrics_data = []
+        for filename, name in [
+            ("random_forest.pkl",    "Random Forest"),
+            ("gradient_boosting.pkl","Gradient Boosting"),
+            ("ridge_regression.pkl", "Ridge Regression"),
+        ]:
+            f = fs_grid.find_one({"filename": filename}, sort=[("uploadDate", -1)])
+            if f and hasattr(f, 'metrics'):
+                m = f.metrics
+                metrics_data.append({
+                    'Model': name,
+                    'RMSE':  m.get('rmse', 'N/A'),
+                    'MAE':   m.get('mae',  'N/A'),
+                    'R²':    m.get('r2',   'N/A'),
+                })
+        client.close()
+        return pd.DataFrame(metrics_data)
+    except Exception as e:
+        return pd.DataFrame()
+        
 # ── Forecast & Alerts ────────────────────────────────────
 def predict_forecast(df, city, model, scaler, is_lstm=False):
     city_df = df[df['city'] == city].sort_values('timestamp_pk')
@@ -530,16 +552,41 @@ with tab3:
                     <div style="font-size:11px;color:#666;">{AQI_LABELS.get(aqi_f,'')}</div>
                 </div>""", unsafe_allow_html=True)
 
+       # ── TAB 3 ─────────────────────────────────────────────────
+with tab3:
+
+    metrics_df = load_metrics()
+    rf_row = metrics_df[metrics_df['Model'] == 'Random Forest'].iloc[0] if not metrics_df.empty else None
+    
+    if rf_row is not None:
+        st.info(f"Predictions made using Random Forest (R²={rf_row['R²']}, RMSE={rf_row['RMSE']}) — retrained daily on 90 days of historical data.")
+    else:
+        st.info("Predictions made using Random Forest — retrained daily on 90 days of historical data.")
+
+    cols = st.columns(len(CITIES))
+    for col, c in zip(cols, CITIES):
+        forecasts = predict_forecast(df, c, model_rf, scaler_rf)
+        with col:
+            st.markdown(f"**{c}**")
+            for day, aqi_f in zip(["Today","Tmrw","Day 3"], forecasts):
+                st.markdown(f"""
+                <div class="forecast-card" style="margin-bottom:8px;">
+                    <div style="font-size:11px;color:#888;">{day}</div>
+                    <div style="font-size:24px;font-weight:600;color:{AQI_COLORS.get(aqi_f,'#888')};">{aqi_f}</div>
+                    <div style="font-size:11px;color:#666;">{AQI_LABELS.get(aqi_f,'')}</div>
+                </div>""", unsafe_allow_html=True)
+
     st.markdown('<br><div class="section-title">Model performance summary</div>', unsafe_allow_html=True)
-    perf_df = pd.DataFrame({
-        'Model': ['Random Forest','Gradient Boosting', 'Ridge Regression'],
-        'RMSE':  [0.1589, 0.2116 , 0.2653 ],
-        'MAE':   [0.051,  0.0753, 0.1421 ],
-        'R²':    [ 0.9584, 0.9262, 0.8839],
-    })
-    st.dataframe(perf_df.style.highlight_max(subset=['R²'], color='#d9f7be')
-                              .highlight_min(subset=['RMSE','MAE'], color='#d9f7be'),
-                 use_container_width=True, hide_index=True)
+    perf_df = load_metrics()
+    if not perf_df.empty:
+        st.dataframe(
+            perf_df.style.highlight_max(subset=['R²'], color='#d9f7be')
+                         .highlight_min(subset=['RMSE','MAE'], color='#d9f7be'),
+            use_container_width=True,
+            hide_index=True
+        )
+    else:
+        st.warning("Could not load model metrics.")
 
 
 # ── TAB 4 ─────────────────────────────────────────────────
