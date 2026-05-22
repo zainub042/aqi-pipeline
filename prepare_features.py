@@ -115,13 +115,13 @@ if __name__ == "__main__":
     # 4. Save locally (optional history)
     file_exists = os.path.isfile(OUTPUT_FILE)
     df.to_csv(OUTPUT_FILE, mode="a", header=not file_exists, index=False)
-    print(f"✅ Saved {len(df)} rows → {OUTPUT_FILE}")
+    print(f" Saved {len(df)} rows → {OUTPUT_FILE}")
 
     # 5. Insert into MongoDB
     try:
         records = df.to_dict("records")
         collection.insert_many(records)
-        print(f"🚀 Uploaded {len(records)} rows → MongoDB Atlas")
+        print(f" Uploaded {len(records)} rows → MongoDB Atlas")
     except Exception as e:
-        print(f"❌ Insert failed: {e}")
+        print(f" Insert failed: {e}")
         exit(1)
