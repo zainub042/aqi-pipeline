@@ -9,3 +9,5 @@ joblib==1.4.2
 shap==0.45.0
 streamlit-autorefresh==1.0.1
 requests==2.31.0
+matplotlib
+python-dotenv
