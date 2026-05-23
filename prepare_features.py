@@ -13,8 +13,8 @@ PAKISTAN_TZ         = ZoneInfo("Asia/Karachi")
 OUTPUT_FILE         = "pakistan_aqi_data.csv"
 
 client = MongoClient(MONGO_URI)
-db = client["aqi_db"]
-collection = db["pakistan_aqi"]
+db = client["aqi_project"]
+collection = db["aqi_data"]
 
 CITIES = [
     {"name": "Karachi",    "lat": 24.8607, "lon": 67.0011},
