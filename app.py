@@ -194,6 +194,7 @@ def load_data():
 
        
         df['timestamp_pk'] = pd.to_datetime(df['timestamp_pk'], utc=True)
+        df['timestamp_pk'] = df['timestamp_pk'].dt.tz_convert('Asia/Karachi').dt.tz_localize(None)
         df = df.sort_values(['city', 'timestamp_pk']).reset_index(drop=True)
         df['hour']        = df['timestamp_pk'].dt.hour
         df['day_of_week'] = df['timestamp_pk'].dt.dayofweek
