@@ -312,7 +312,7 @@ The LSTM was trained successfully in the local Anaconda environment and produced
 
 ---
 
-## 🙏 Acknowledgements
+##  Acknowledgements
 
 - [OpenWeather API](https://openweathermap.org/api/air-pollution) — real-time air pollution data
 - [MongoDB Atlas](https://www.mongodb.com/atlas) — cloud feature store
