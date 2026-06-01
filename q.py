@@ -78,7 +78,7 @@ def save_model(model, filename, metrics, best_model=False):
     path = os.path.join(MODEL_DIR, filename)
     joblib.dump(model, path)
 
-    # ✅ Delete old versions to avoid duplicates
+    #  Delete old versions to avoid duplicates
     for old_file in fs_grid.find({"filename": filename}):
         fs_grid.delete(old_file._id)
 
@@ -90,7 +90,7 @@ def save_model(model, filename, metrics, best_model=False):
             trained_at=datetime.utcnow().isoformat(),
             best_model=best_model
         )
-    print(f"✅ {filename} stored in MongoDB GridFS with id {file_id}")
+    print(f" {filename} stored in MongoDB GridFS with id {file_id}")
     return path
 
 
@@ -110,7 +110,7 @@ print(f"Loaded {len(df)} rows across {df['city'].nunique()} cities")
 # ── Step 2: Feature engineering ──────────────────────────
 print("\nEngineering features...")
 
-# ✅ Fix aqi_lag1 NaN — use current aqi as fallback
+#  Fix aqi_lag1 NaN — use current aqi as fallback
 df['aqi_lag1'] = df.groupby('city')['aqi'].shift(1)
 df['aqi_lag1'] = df['aqi_lag1'].fillna(df['aqi'])
 
@@ -144,13 +144,13 @@ scaler     = StandardScaler()
 X_train_sc = scaler.fit_transform(X_train)
 X_test_sc  = scaler.transform(X_test)
 
-# ✅ Save scaler — delete old version first
+#  Save scaler — delete old version first
 for old in fs_grid.find({"filename": "scaler.pkl"}):
     fs_grid.delete(old._id)
 joblib.dump(scaler, os.path.join(MODEL_DIR, "scaler.pkl"))
 with open(os.path.join(MODEL_DIR, "scaler.pkl"), "rb") as f:
     fs_grid.put(f, filename="scaler.pkl", trained_at=datetime.utcnow().isoformat())
-print("✅ Scaler saved to MongoDB")
+print(" Scaler saved to MongoDB")
 
 # ── Step 4: Train Models ──────────────────────────────────
 print("\nTraining Random Forest...")
@@ -198,7 +198,7 @@ plt.suptitle('Model Comparison (🟢 = best)', fontsize=13, fontweight='bold')
 plt.tight_layout()
 plt.savefig(os.path.join(MODEL_DIR, "model_comparison.png"), dpi=150)
 plt.close()
-print("✅ Comparison chart saved")
+print(" Comparison chart saved")
 
 # ── Step 6: Save Models to MongoDB GridFS ────────────────
 filename_map = {
@@ -225,5 +225,5 @@ for name, model in model_map.items():
         best_model=(name == best_name)
     )
 
-print("\n✅ All models trained and stored in MongoDB GridFS")
+print("\n Yayyy! All models trained and stored in MongoDB GridFS")
 print(f"🏆 Best model: {best_name} (RMSE: {all_metrics[best_name]['rmse']})")
