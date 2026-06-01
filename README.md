@@ -2,7 +2,7 @@
 
 > **An end-to-end MLOps pipeline for real-time Air Quality Index prediction across 7 cities — powered by OpenWeather API, MongoDB, GitHub Actions, and Streamlit.**
 
-[![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://aqi-pipeline-crgkkiixn4gzgse8s6j6oy.streamlit.app/)
+[![Streamlit App](https://img.shields.io/badge/Streamlit-FF4B4B?logo=streamlit&logoColor=white)](https://aqi-pipeline-crgkkiixn4gzgse8s6j6oy.streamlit.app/)
 [![Python](https://img.shields.io/badge/Python-3.9%2B-blue?logo=python)](https://www.python.org/)
 [![GitHub Actions](https://img.shields.io/badge/CI%2FCD-GitHub%20Actions-2088FF?logo=github-actions)](https://github.com/features/actions)
 [![MongoDB](https://img.shields.io/badge/Database-MongoDB-47A248?logo=mongodb)](https://www.mongodb.com/)
